@@ -10,7 +10,13 @@
  */
  
 int main(int argc, char ** argv) {
-    int command_count = 0;
+    int status;
+    int compteur = 0;
+    int argument_n =  1 << 20;
+    int nb_commandes = 1;
+    int pid_enfant;
+    int index_position = 0;
+
     for (int k = 1; k < argc; k++)
         if (strcmp(argv[k], ":") == 0)
             command_count++;
