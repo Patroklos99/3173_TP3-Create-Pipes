@@ -16,10 +16,12 @@ int main(int argc, char ** argv) {
     int nb_commandes = 1;
     int pid_enfant;
     int index_position = 0;
-
-    for (int k = 1; k < argc; k++)
-        if (strcmp(argv[k], ":") == 0)
-            command_count++;
+    
+    for (int i = 0; i < argc; ++i)
+        if (argv[i][0] == ':') {
+            argv[i] = NULL;
+            ++nb_commandes;
+        }
 
     command_count++;
     char ***cmd = calloc(command_count + 1, sizeof(char **));
