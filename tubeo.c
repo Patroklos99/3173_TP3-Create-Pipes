@@ -28,6 +28,10 @@ int main(int argc, char ** argv) {
     }
     int index[nb_commandes];
     index[index_position++] = ++compteur;
+    for (int r = 0; r < argc; ++r) {
+        if (argv[r] == NULL)
+            index[index_position++] = r + 1;
+    }   
 
     command_count++;
     char ***cmd = calloc(command_count + 1, sizeof(char **));
