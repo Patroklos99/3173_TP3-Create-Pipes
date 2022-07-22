@@ -10,5 +10,12 @@
  */
  
 int main(int argc, char ** argv) {
+    int command_count = 0;
+    for (int k = 1; k < argc; k++)
+        if (strcmp(argv[k], ":") == 0)
+            command_count++;
+
+    command_count++;
+    char ***cmd = calloc(command_count + 1, sizeof(char **));
     return 0;
 }
