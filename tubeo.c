@@ -22,6 +22,10 @@ int main(int argc, char ** argv) {
             argv[i] = NULL;
             ++nb_commandes;
         }
+    if (argv[1][0] == '-') {
+        argument_n = ((argv[1][3]) - '0') - 1;
+        compteur = 2;
+    }
 
     command_count++;
     char ***cmd = calloc(command_count + 1, sizeof(char **));
