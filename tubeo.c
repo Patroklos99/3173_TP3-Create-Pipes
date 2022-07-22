@@ -26,6 +26,8 @@ int main(int argc, char ** argv) {
         argument_n = ((argv[1][3]) - '0') - 1;
         compteur = 2;
     }
+    int index[nb_commandes];
+    index[index_position++] = ++compteur;
 
     command_count++;
     char ***cmd = calloc(command_count + 1, sizeof(char **));
