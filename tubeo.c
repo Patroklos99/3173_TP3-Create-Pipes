@@ -17,5 +17,10 @@ int main(int argc, char ** argv) {
 
     command_count++;
     char ***cmd = calloc(command_count + 1, sizeof(char **));
+
+    int command = 0;
+    int first_arg = 1;
+    if (argv[1][0] == '-')
+        first_arg = 3;
     return 0;
 }
