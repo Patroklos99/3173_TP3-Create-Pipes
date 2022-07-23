@@ -6,3 +6,6 @@ load test_helper
 	true
 }
 
+@test "fail_sortie_signal" { 	
+	run ./tubeo echo "INF3173 - Principes des systèmes d'exploitation" : 	 	 check 139 "" 
+}
