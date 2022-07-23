@@ -31,7 +31,10 @@ int main(int argc, char ** argv) {
     for (int r = 0; r < argc; ++r) {
         if (argv[r] == NULL)
             index[index_position++] = r + 1;
-    }   
+    }
+    int pipe_precedent, pf_file_descriptor[2];
+    pipe_precedent = STDIN_FILENO;
+    ssize_t octets_lus = 0;
 
     command_count++;
     char ***cmd = calloc(command_count + 1, sizeof(char **));
