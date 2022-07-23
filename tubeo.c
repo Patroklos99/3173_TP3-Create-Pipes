@@ -9,6 +9,14 @@
 #define READ_END     0
 #define WRITE_END    1
 
+void modifier_argv(char **argv, int argc, int *nb_commandes) {
+    for (int i = 0; i < argc; ++i)
+        if (argv[i][0] == ':') {
+        argv[i] = NULL;
+        ++*nb_commandes;
+    }
+}
+
 int main(int argc, char *argv[]) {
     int status;
     int compteur = 0;
@@ -16,11 +24,8 @@ int main(int argc, char *argv[]) {
     int nb_commandes = 1;
     int pid_enfant;
     int index_position = 0;
-    for (int i = 0; i < argc; ++i)
-        if (argv[i][0] == ':') {
-            argv[i] = NULL;
-            ++nb_commandes;
-        }
+    modifier_argv(argv, argc, &nb_commandes);
+
     if (argv[1][0] == '-') {
         argument_n = ((argv[1][3]) - '0') - 1;
         compteur = 2;
@@ -54,13 +59,13 @@ int main(int argc, char *argv[]) {
         close(pf_file_descriptor[1]); // Ferme write du pipe courrant (pas necessaire dans parent)
         pipe_precedent = pf_file_descriptor[0]; // Sauvegarde read end du peipe courrant pour utiliser dans la prochaine iteration
         if (i == argument_n) {
-	   int file_descriptor_splice[2];
+            //pf_file_descriptor[0] = probe(pf_file_descriptor[0], pi);
+            int file_descriptor_splice[2];
             pipe(file_descriptor_splice);
             octets_lus = splice(pf_file_descriptor[0], NULL, file_descriptor_splice[1], NULL, 200, SPLICE_F_MOVE);
             close(file_descriptor_splice[1]);
             pipe_precedent = file_descriptor_splice[0];
             printf("%ld", octets_lus);
-
         }
     }
     close(pf_file_descriptor[0]);
