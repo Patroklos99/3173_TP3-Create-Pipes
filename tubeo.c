@@ -17,6 +17,13 @@ void modifier_argv(char **argv, int argc, int *nb_commandes) {
     }
 }
 
+void valider_arg_n(char *const *argv, int *compteur, int *argument_n) {
+    if (argv[1][0] == '-') {
+        *argument_n = ((argv[1][3]) - '0') - 1;
+        *compteur = 2;
+    }
+}
+
 int main(int argc, char *argv[]) {
     int status;
     int compteur = 0;
@@ -25,11 +32,7 @@ int main(int argc, char *argv[]) {
     int pid_enfant;
     int index_position = 0;
     modifier_argv(argv, argc, &nb_commandes);
-
-    if (argv[1][0] == '-') {
-        argument_n = ((argv[1][3]) - '0') - 1;
-        compteur = 2;
-    }
+    valider_arg_n(argv, &compteur, &argument_n);
     int index[nb_commandes];
     index[index_position++] = ++compteur;
     for (int r = 0; r < argc; ++r) {
