@@ -26,36 +26,59 @@ void modifier_argv(char **argv, int argc, int *nb_commandes) {
 }
 
 /**
- * Valide si l'argument -n existe
+ * Valide si l'argument -n existe et le sauvegarde en variable.
  *
  * @param argv pointeur contenant les arguments.
- * @param compteur 
+ * @param argument_n variable ou l'argument de -n est placé.
+ *
+ * @return position_1ere_commande position de la 1ere commande (echo).
  */
 int valider_arg_n(char *const *argv, int *argument_n) {
-    int compteur = 0;
+    int position_1ere_commande = 0;
     if (argv[1][0] == '-') {
         *argument_n = ((argv[1][3]) - '0') - 1;
-        compteur = 2;
+        position_1ere_commande = 2;
     }
-    return compteur;
+    return position_1ere_commande;
 }
 
-void indexer_arguments(int argc, char *const *argv, int compteur, int *index) {
+/**
+ * Indexe les positions correcte des commandes valides.
+ *
+ * @param argc nb d'arguments.
+ * @param argv pointeur contenant les arguments.
+ * @param position_1ere_commande position de la 1ere commande (echo).
+ * @param index tableau de int ou les positions sont sauvegardées.
+ *
+ */
+void indexer_arguments(int argc, char *const *argv, int position_1ere_commande, int *index) {
     int index_position = 0;
-    index[index_position++] = ++compteur;
+    index[index_position++] = ++position_1ere_commande;
     for (int r = 0; r < argc; ++r) {
         if (argv[r] == NULL)
             index[index_position++] = r + 1;
     }
 }
 
+/**
+ * Execute le processus fils et ses fonctions correspondante.
+ *
+ * @param argv pointeur contenant les arguments.
+ * @param argument_n variable ou l'argument de -n est placé.
+ * @param nb_commandes variable du nombre de commandes.
+ * @param index tableau de int ou les positions sont sauvegardées.
+ * @param pipe_precedent pipe contenant la dernière lecture en sortie.
+ * @param pf_file_descriptor array contenant les 2 derniers pipes d'ecriture et de lecture créés.
+ * @param i compteur de la boucle for necessaire pour l'execution ordonnée des commandes.
+ *
+ */
 void executer_processus_fils(char *const *argv, int argument_n, int nb_commandes, const int *index, int pipe_precedent,
                              const int *pf_file_descriptor, int i) {
     if (pipe_precedent != STDIN_FILENO) {
-        dup2(pipe_precedent, STDIN_FILENO);  // redirect precedent vers stdin
+        dup2(pipe_precedent, STDIN_FILENO);  // redirect pipe_precedent vers stdin
         close(pipe_precedent);
     }
-    if (i < nb_commandes - 1 || i == argument_n) {         // redirect pdf[1] vers stdout
+    if (i < nb_commandes - 1 || i == argument_n) {      // redirect pdf[1] vers stdout
         dup2(pf_file_descriptor[1], STDOUT_FILENO);
         close(pf_file_descriptor[1]);
     }
@@ -63,16 +86,21 @@ void executer_processus_fils(char *const *argv, int argument_n, int nb_commandes
     _Exit(127);
 }
 
+/**
+ * Execute le processus fils et ses fonctions correspondante.
+ *
+ * @param pf_file_descriptor array contenant les 2 derniers pipes d'ecriture et de lecture créés.
+ * 
+ * @return file_descriptor_splice[0] la nouvelle valeur de pipe_precendant.
+ */
 int executer_splice(const int *pf_file_descriptor) {
-    int pipe_precedent;
     ssize_t octets_lus = 0;
     int file_descriptor_splice[2];
     pipe(file_descriptor_splice);
     octets_lus = splice(pf_file_descriptor[0], NULL, file_descriptor_splice[1], NULL, 255, SPLICE_F_MOVE);
     close(file_descriptor_splice[1]);
-    pipe_precedent = file_descriptor_splice[0];
     printf("%ld", octets_lus);
-    return pipe_precedent;
+    return file_descriptor_splice[0]; //retourne la nouvelle valeur de pipe_précedant.
 }
 
 int valider_type_sortie(int status) {
@@ -109,9 +137,9 @@ int main(int argc, char *argv[]) {
     int argument_n = 1 << 20;
     int nb_commandes = 1;
     modifier_argv(argv, argc, &nb_commandes);
-    int compteur = valider_arg_n(argv, &argument_n);
+    int position_1ere_commande = valider_arg_n(argv, &argument_n);
     int index[nb_commandes];
-    indexer_arguments(argc, argv, compteur, index);
+    indexer_arguments(argc, argv, position_1ere_commande, index);
     return executer_tubes(argv, argument_n, nb_commandes, index);
 }
 
