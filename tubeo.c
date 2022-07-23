@@ -90,7 +90,7 @@ void executer_processus_fils(char *const *argv, int argument_n, int nb_commandes
  * Execute le processus fils et ses fonctions correspondante.
  *
  * @param pf_file_descriptor array contenant les 2 derniers pipes d'ecriture et de lecture créés.
- * 
+ *
  * @return file_descriptor_splice[0] la nouvelle valeur de pipe_precendant.
  */
 int executer_splice(const int *pf_file_descriptor) {
@@ -103,6 +103,13 @@ int executer_splice(const int *pf_file_descriptor) {
     return file_descriptor_splice[0]; //retourne la nouvelle valeur de pipe_précedant.
 }
 
+/**
+ * Valide le type de sortie (sortie reguliere ou sortie signal)
+ *
+ * @param status valeur necessaire pour les validations.
+ *
+ * @return le valeur de la sortie dependant du type.
+ */
 int valider_type_sortie(int status) {
     if WIFEXITED(status)
         return WEXITSTATUS(status);
@@ -110,6 +117,16 @@ int valider_type_sortie(int status) {
         return 128 + WTERMSIG(status);
 }
 
+/**
+ * Execute les commandes désirées passées en argument.
+ *
+ * @param argv pointeur contenant les arguments.
+ * @param argument_n variable ou l'argument de -n est placé.
+ * @param nb_commandes variable du nombre de commandes.
+ * @param index tableau de int ou les positions sont sauvegardées.
+ *
+ * @return le valeur de sortie.
+ */
 int executer_tubes(char *const *argv, int argument_n, int nb_commandes, const int *index) {
     int status;
     int pid_enfant;
