@@ -64,6 +64,7 @@ int main(int argc, char *argv[]) {
     close(pf_file_descriptor[1]);
     if WIFEXITED(status)
         return WEXITSTATUS(status);
-    return 0;
+    else if (WIFSIGNALED(status))
+        return 128 + WTERMSIG(status);
 }
 
