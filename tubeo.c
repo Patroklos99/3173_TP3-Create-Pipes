@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
-
+#define MAX_PIPE_SIZE 64000
 #define READ_END     0
 #define WRITE_END    1
 
@@ -106,7 +106,7 @@ int executer_splice(const int *pf_file_descriptor) {
     ssize_t octets_lus = 0;
     int file_descriptor_splice[2];
     pipe(file_descriptor_splice);
-    octets_lus = splice(pf_file_descriptor[0], NULL, file_descriptor_splice[1], NULL, 255, SPLICE_F_MOVE);
+    octets_lus = splice(pf_file_descriptor[0], NULL, file_descriptor_splice[1], NULL, MAX_PIPE_SIZE, SPLICE_F_MOVE);
     close(file_descriptor_splice[1]);
     afficher_octets(octets_lus);
     return file_descriptor_splice[0]; //retourne la nouvelle valeur de pipe_précedant.
