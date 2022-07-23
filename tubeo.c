@@ -87,6 +87,15 @@ void executer_processus_fils(char *const *argv, int argument_n, int nb_commandes
 }
 
 /**
+ * Affiche les octets lus s'ils sont égales ou plus grand que 0.
+ */
+void afficher_octets(ssize_t octets_lus) {
+    if (octets_lus >= 0)
+        printf("%ld", octets_lus);
+}
+
+
+/**
  * Execute le processus fils et ses fonctions correspondante.
  *
  * @param pf_file_descriptor array contenant les 2 derniers pipes d'ecriture et de lecture créés.
@@ -99,7 +108,7 @@ int executer_splice(const int *pf_file_descriptor) {
     pipe(file_descriptor_splice);
     octets_lus = splice(pf_file_descriptor[0], NULL, file_descriptor_splice[1], NULL, 255, SPLICE_F_MOVE);
     close(file_descriptor_splice[1]);
-    printf("%ld", octets_lus);
+    afficher_octets(octets_lus);
     return file_descriptor_splice[0]; //retourne la nouvelle valeur de pipe_précedant.
 }
 
