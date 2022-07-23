@@ -59,6 +59,8 @@ int main(int argc, char *argv[]) {
             octets_lus = splice(pf_file_descriptor[0], NULL, file_descriptor_splice[1], NULL, 200, SPLICE_F_MOVE);
             close(file_descriptor_splice[1]);
             pipe_precedent = file_descriptor_splice[0];
+            printf("%ld", octets_lus);
+
         }
     }
     close(pf_file_descriptor[0]);
