@@ -46,18 +46,20 @@ int main(int argc, char ** argv) {
     ssize_t octets_lus = 0;
 
     for (int i = 0; i < nb_commandes; i++) {
-        pipe(pf_file_descriptor);
+	pipe(pf_file_descriptor);
         if ((pid_enfant = fork()) == 0) {
-            if (pipe_precedent != STDIN_FILENO) {         
-                dup2(pipe_precedent, STDIN_FILENO);  
+            if (pipe_precedent != STDIN_FILENO) {
+                dup2(pipe_precedent, STDIN_FILENO);  // redirect precedent vers stdin
+                close(pipe_precedent);
             }
-            if (i < nb_commandes - 1 || i == argument_n) {  
+            if (i < nb_commandes - 1 || i == argument_n) {         // redirect pdf[1] vers stdout
                 dup2(pf_file_descriptor[1], STDOUT_FILENO);
+                close(pf_file_descriptor[1]);
             }
-            execvp(argv[index[i]], argv + (index[i])); 
+            execvp(argv[index[i]], argv + (index[i]));
+            _Exit(127);
         }
         wait(&status);
-        pipe_precedent = pf_file_descriptor[0]; 
     }
 
     return 0;
