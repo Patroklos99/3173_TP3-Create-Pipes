@@ -53,10 +53,17 @@ int main(int argc, char *argv[]) {
         close(pipe_precedent); // Ferme read end du pipe precent (pas necessaire dans parent)
         close(pf_file_descriptor[1]); // Ferme write du pipe courrant (pas necessaire dans parent)
         pipe_precedent = pf_file_descriptor[0]; // Sauvegarde read end du peipe courrant pour utiliser dans la prochaine iteration
+        if (i == argument_n) {
+            int pipe_test[2];
+            pipe(pipe_test);
+            octets_lus = splice(pf_file_descriptor[1], NULL, pipe_test[0], NULL, 200, SPLICE_F_MOVE);
+            printf("%ld", octets_lus);
+        }
     }
     close(pf_file_descriptor[0]);
     close(pf_file_descriptor[1]);
     if WIFEXITED(status)
         return WEXITSTATUS(status);
+    return 0;
 }
 
