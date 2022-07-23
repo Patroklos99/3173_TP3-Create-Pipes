@@ -60,6 +60,9 @@ int main(int argc, char ** argv) {
             _Exit(127);
         }
         wait(&status);
+	close(pipe_precedent); // Ferme read end du pipe precent (pas necessaire dans parent)
+        close(pf_file_descriptor[1]); // Ferme write du pipe courrant (pas necessaire dans parent)
+        pipe_precedent = pf_file_descriptor[0]; // Sauvegarde read end du peipe courrant pour utiliser dans la prochaine iteration
     }
 
     return 0;
