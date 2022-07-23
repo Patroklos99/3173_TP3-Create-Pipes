@@ -54,10 +54,11 @@ int main(int argc, char *argv[]) {
         close(pf_file_descriptor[1]); // Ferme write du pipe courrant (pas necessaire dans parent)
         pipe_precedent = pf_file_descriptor[0]; // Sauvegarde read end du peipe courrant pour utiliser dans la prochaine iteration
         if (i == argument_n) {
-            int pipe_test[2];
-            pipe(pipe_test);
-            octets_lus = splice(pf_file_descriptor[1], NULL, pipe_test[0], NULL, 200, SPLICE_F_MOVE);
-            printf("%ld", octets_lus);
+	   int file_descriptor_splice[2];
+            pipe(file_descriptor_splice);
+            octets_lus = splice(pf_file_descriptor[0], NULL, file_descriptor_splice[1], NULL, 200, SPLICE_F_MOVE);
+            close(file_descriptor_splice[1]);
+            pipe_precedent = file_descriptor_splice[0];
         }
     }
     close(pf_file_descriptor[0]);
