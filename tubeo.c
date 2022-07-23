@@ -64,6 +64,7 @@ int main(int argc, char ** argv) {
         close(pf_file_descriptor[1]); // Ferme write du pipe courrant (pas necessaire dans parent)
         pipe_precedent = pf_file_descriptor[0]; // Sauvegarde read end du peipe courrant pour utiliser dans la prochaine iteration
     }
-
+    close(pf_file_descriptor[0]);
+    close(pf_file_descriptor[1]);  
     return 0;
 }
