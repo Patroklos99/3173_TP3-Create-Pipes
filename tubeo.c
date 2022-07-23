@@ -24,24 +24,28 @@ void valider_arg_n(char *const *argv, int *compteur, int *argument_n) {
     }
 }
 
+void indexer_arguments(int argc, char *const *argv, int compteur, int *index) {
+    int index_position = 0;
+    index[index_position++] = ++compteur;
+    for (int r = 0; r < argc; ++r) {
+        if (argv[r] == NULL)
+            index[index_position++] = r + 1;
+    }
+}
+
 int main(int argc, char *argv[]) {
     int status;
     int compteur = 0;
     int argument_n =  1 << 20;
     int nb_commandes = 1;
     int pid_enfant;
-    int index_position = 0;
     modifier_argv(argv, argc, &nb_commandes);
     valider_arg_n(argv, &compteur, &argument_n);
     int index[nb_commandes];
-    index[index_position++] = ++compteur;
-    for (int r = 0; r < argc; ++r) {
-        if (argv[r] == NULL)
-            index[index_position++] = r + 1;
-    }
+    indexer_arguments(argc, argv, compteur, index);
+
     int pipe_precedent, pf_file_descriptor[2];
     pipe_precedent = STDIN_FILENO;
-    ssize_t octets_lus = 0;
 
     for (int i = 0; i < nb_commandes; i++) {
         pipe(pf_file_descriptor);
@@ -62,6 +66,7 @@ int main(int argc, char *argv[]) {
         close(pf_file_descriptor[1]); // Ferme write du pipe courrant (pas necessaire dans parent)
         pipe_precedent = pf_file_descriptor[0]; // Sauvegarde read end du peipe courrant pour utiliser dans la prochaine iteration
         if (i == argument_n) {
+            ssize_t octets_lus = 0;
             //pf_file_descriptor[0] = probe(pf_file_descriptor[0], pi);
             int file_descriptor_splice[2];
             pipe(file_descriptor_splice);
