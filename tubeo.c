@@ -33,6 +33,55 @@ void indexer_arguments(int argc, char *const *argv, int compteur, int *index) {
     }
 }
 
+void executer_processus_fils(char *const *argv, int argument_n, int nb_commandes, const int *index, int pipe_precedent,
+                             const int *pf_file_descriptor, int i) {
+    if (pipe_precedent != STDIN_FILENO) {
+        dup2(pipe_precedent, STDIN_FILENO);  // redirect precedent vers stdin
+        close(pipe_precedent);
+    }
+    if (i < nb_commandes - 1 || i == argument_n) {         // redirect pdf[1] vers stdout
+        dup2(pf_file_descriptor[1], STDOUT_FILENO);
+        close(pf_file_descriptor[1]);
+    }
+    execvp(argv[index[i]], argv + (index[i]));
+    _Exit(127);
+}
+
+int executer_splice(const int *pf_file_descriptor) {
+    int pipe_precedent;
+    ssize_t octets_lus = 0;
+    //pf_file_descriptor[0] = probe(pf_file_descriptor[0], pi);
+    int file_descriptor_splice[2];
+    pipe(file_descriptor_splice);
+    octets_lus = splice(pf_file_descriptor[0], NULL, file_descriptor_splice[1], NULL, 200, SPLICE_F_MOVE);
+    close(file_descriptor_splice[1]);
+    pipe_precedent = file_descriptor_splice[0];
+    printf("%ld", octets_lus);
+    return pipe_precedent;
+}
+
+int executer_tubes(char *const *argv, int *status, int argument_n, int nb_commandes, const int *index) {
+    int pid_enfant;
+    int pipe_precedent, pf_file_descriptor[2];
+    pipe_precedent = STDIN_FILENO;
+
+    for (int i = 0; i < nb_commandes; i++) {
+        pipe(pf_file_descriptor);
+        if ((pid_enfant = fork()) == 0) {
+            executer_processus_fils(argv, argument_n, nb_commandes, index, pipe_precedent, pf_file_descriptor, i);
+        }
+        wait(status);
+        close(pipe_precedent); // Ferme read end du pipe precent (pas necessaire dans parent)
+        close(pf_file_descriptor[1]); // Ferme write du pipe courrant (pas necessaire dans parent)
+        pipe_precedent = pf_file_descriptor[0]; // Sauvegarde read end du peipe courrant pour utiliser dans la prochaine iteration
+        if (i == argument_n) 
+            pipe_precedent = executer_splice(pf_file_descriptor);
+    }
+    close(pf_file_descriptor[0]);
+    close(pf_file_descriptor[1]);
+    return (*status);
+}
+
 int main(int argc, char *argv[]) {
     int status;
     int compteur = 0;
@@ -43,41 +92,7 @@ int main(int argc, char *argv[]) {
     valider_arg_n(argv, &compteur, &argument_n);
     int index[nb_commandes];
     indexer_arguments(argc, argv, compteur, index);
-
-    int pipe_precedent, pf_file_descriptor[2];
-    pipe_precedent = STDIN_FILENO;
-
-    for (int i = 0; i < nb_commandes; i++) {
-        pipe(pf_file_descriptor);
-        if ((pid_enfant = fork()) == 0) {
-            if (pipe_precedent != STDIN_FILENO) {
-                dup2(pipe_precedent, STDIN_FILENO);  // redirect precedent vers stdin
-                close(pipe_precedent);
-            }
-            if (i < nb_commandes - 1 || i == argument_n) {         // redirect pdf[1] vers stdout
-                dup2(pf_file_descriptor[1], STDOUT_FILENO);
-                close(pf_file_descriptor[1]);
-            }
-            execvp(argv[index[i]], argv + (index[i]));
-            _Exit(127);
-        }
-        wait(&status);
-        close(pipe_precedent); // Ferme read end du pipe precent (pas necessaire dans parent)
-        close(pf_file_descriptor[1]); // Ferme write du pipe courrant (pas necessaire dans parent)
-        pipe_precedent = pf_file_descriptor[0]; // Sauvegarde read end du peipe courrant pour utiliser dans la prochaine iteration
-        if (i == argument_n) {
-            ssize_t octets_lus = 0;
-            //pf_file_descriptor[0] = probe(pf_file_descriptor[0], pi);
-            int file_descriptor_splice[2];
-            pipe(file_descriptor_splice);
-            octets_lus = splice(pf_file_descriptor[0], NULL, file_descriptor_splice[1], NULL, 200, SPLICE_F_MOVE);
-            close(file_descriptor_splice[1]);
-            pipe_precedent = file_descriptor_splice[0];
-            printf("%ld", octets_lus);
-        }
-    }
-    close(pf_file_descriptor[0]);
-    close(pf_file_descriptor[1]);
+    status = executer_tubes(argv, &status, argument_n, nb_commandes, index);
     if WIFEXITED(status)
         return WEXITSTATUS(status);
     else if (WIFSIGNALED(status))
