@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
+
 #define MAX_PIPE_SIZE 64000
 #define READ_END     0
 #define WRITE_END    1
@@ -75,12 +76,16 @@ void indexer_arguments(int argc, char *const *argv, int position_1ere_commande, 
 void executer_processus_fils(char *const *argv, int argument_n, int nb_commandes, const int *index, int pipe_precedent,
                              const int *pf_file_descriptor, int i) {
     if (pipe_precedent != STDIN_FILENO) {
-        dup2(pipe_precedent, STDIN_FILENO);  // redirect pipe_precedent vers stdin
-        close(pipe_precedent);
+        if (dup2(pipe_precedent, STDIN_FILENO) == -1)  // redirect pipe_precedent vers stdin
+            exit(1);
+        if (close(pipe_precedent) == -1)
+            exit(1);
     }
     if (i < nb_commandes - 1 || i == argument_n) {      // redirect pdf[1] vers stdout
-        dup2(pf_file_descriptor[1], STDOUT_FILENO);
-        close(pf_file_descriptor[1]);
+        if (dup2(pf_file_descriptor[1], STDOUT_FILENO) == -1)
+            exit(1);
+        if (close(pf_file_descriptor[1]) == -1)
+            exit(1);
     }
     execvp(argv[index[i]], argv + (index[i]));
     _Exit(127);
@@ -105,9 +110,13 @@ void afficher_octets(ssize_t octets_lus) {
 int executer_splice(const int *pf_file_descriptor) {
     ssize_t octets_lus = 0;
     int file_descriptor_splice[2];
-    pipe(file_descriptor_splice);
+    if (pipe(file_descriptor_splice) == -1)
+        exit(1);
     octets_lus = splice(pf_file_descriptor[0], NULL, file_descriptor_splice[1], NULL, MAX_PIPE_SIZE, SPLICE_F_MOVE);
-    close(file_descriptor_splice[1]);
+    if (octets_lus == -1)
+        exit(1);
+    if (close(file_descriptor_splice[1]) == -1)
+        exit(1);
     afficher_octets(octets_lus);
     return file_descriptor_splice[0]; //retourne la nouvelle valeur de pipe_précedant.
 }
@@ -142,20 +151,28 @@ int executer_tubes(char *const *argv, int argument_n, int nb_commandes, const in
     int pipe_precedent, pf_file_descriptor[2];
     pipe_precedent = STDIN_FILENO;
     for (int i = 0; i < nb_commandes; i++) {
-        pipe(pf_file_descriptor);
-        if ((pid_enfant = fork()) == 0)
+        if (pipe(pf_file_descriptor) == -1)
+            exit(1);
+        if ((pid_enfant = fork()) == -1)
+            exit(1);
+        else if (pid_enfant == 0)
             executer_processus_fils(argv, argument_n, nb_commandes, index, pipe_precedent, pf_file_descriptor, i);
         else {
-            wait(&status);
-            close(pipe_precedent); // Ferme read end du pipe precent (pas necessaire dans parent)
-            close(pf_file_descriptor[1]); // Ferme write du pipe courrant (pas necessaire dans parent)
+            if (wait(&status) == -1)
+                exit(1);
+            if (close(pipe_precedent) == -1) // Ferme read end du pipe precent (pas necessaire dans parent)
+                exit(1);
+            if (close(pf_file_descriptor[1]) == -1) // Ferme write du pipe courrant (pas necessaire dans parent)
+                exit(1);
             pipe_precedent = pf_file_descriptor[0]; // Sauvegarde read end du peipe courrant pour utiliser dans la prochaine iteration
             if (i == argument_n)
                 pipe_precedent = executer_splice(pf_file_descriptor);
         }
     }
-    close(pf_file_descriptor[0]);
-    close(pf_file_descriptor[1]);
+    if (close(pf_file_descriptor[0]) == -1)
+        exit(1);
+//    if (close(pf_file_descriptor[1]) == -1)
+ //       exit(1);
     return valider_type_sortie(status);
 }
 
