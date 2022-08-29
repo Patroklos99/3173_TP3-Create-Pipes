@@ -3,6 +3,24 @@
 L'objectif du TP2 est de développer l'utilitaire `tubeo` capable d'exécuter des conduites (*pipelines*) de commandes (comme le shell), mais aussi de comptabiliser le nombre d'octets qui transitent par une redirection précisée en option.
 Ce TP vous permet d'approfondir la communication interprocessus avec les tubes UNIX (et l'appel système `pipe`).
 
+</p>
+
+<summary>Exemple </summary>
+
+<pre>
+<b>groot@iam:~/$</b> ./tubeo echo "INF3173 - Principes des systèmes d'exploitation" : wc : rev : cat
+94      6       1      
+<b>groot@iam:~/$</b> ./tubeo -n 3 echo "INF3173 - Principes des systèmes d'exploitation" : wc : rev : cat
+24
+94      6       1 
+<b>groot@iam:~/$</b> ./tubeo -n 3 echo "INF3173 - Principes des systèmes d'exploitation" : fail : rev :
+0
+<b>groot@iam:~/$</b> echo $?
+139
+</pre>
+
+</p>
+
 ## Avant de commencer
 
 * Cloner (le bouton `fork` en haut à droite) ce dépôt sur le gitlab départemental.
